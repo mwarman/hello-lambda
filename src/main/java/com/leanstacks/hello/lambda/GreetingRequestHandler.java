@@ -17,7 +17,9 @@ public class GreetingRequestHandler implements RequestHandler<User, Greeting> {
         logger.info("> handleRequest");
         logger.debug("  user.name: {}", user.getName());
 
-        String greetingText = String.format("Hello %1s!", user.getName());
+        String greetingPrefix = System.getenv("GREETING_PREFIX");
+
+        String greetingText = String.format("%1s %2s!", greetingPrefix, user.getName());
 
         Greeting greeting = new Greeting(greetingText);
         logger.debug("  greeting.text: {}", greeting.getText());
