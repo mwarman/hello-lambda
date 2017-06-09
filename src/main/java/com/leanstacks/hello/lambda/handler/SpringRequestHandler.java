@@ -1,7 +1,9 @@
-package com.leanstacks.hello.lambda;
+package com.leanstacks.hello.lambda.handler;
 
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
+
+import com.leanstacks.hello.lambda.ApplicationConfiguration;
 
 public abstract class SpringRequestHandler {
 

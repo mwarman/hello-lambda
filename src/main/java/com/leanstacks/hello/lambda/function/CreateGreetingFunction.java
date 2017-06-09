@@ -1,4 +1,4 @@
-package com.leanstacks.hello.lambda.handler;
+package com.leanstacks.hello.lambda.function;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -6,32 +6,31 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import com.amazonaws.services.lambda.runtime.Context;
-import com.amazonaws.services.lambda.runtime.RequestHandler;
 import com.leanstacks.hello.lambda.model.Greeting;
 import com.leanstacks.hello.lambda.model.User;
 import com.leanstacks.hello.lambda.service.GreetingService;
 
 @Component
-public class CreateGreetingRequestHandler implements RequestHandler<User, Greeting> {
+public class CreateGreetingFunction implements Function<User, Greeting> {
 
-    private static final Logger logger = LoggerFactory.getLogger(CreateGreetingRequestHandler.class);
+    private static final Logger logger = LoggerFactory.getLogger(CreateGreetingFunction.class);
 
     private final GreetingService greetingService;
 
     @Autowired
-    public CreateGreetingRequestHandler(GreetingService greetingService) {
+    public CreateGreetingFunction(GreetingService greetingService) {
         this.greetingService = greetingService;
     }
 
     @Override
-    public Greeting handleRequest(User user, Context context) {
-        logger.info("> handleRequest");
+    public Greeting execute(User user, Context context) {
+        logger.info("> execute");
         logger.debug("  user.name: {}", user.getName());
 
         Greeting greeting = greetingService.create(user);
         logger.debug("  greeting.text: {}", greeting.getText());
 
-        logger.info("< handleRequest");
+        logger.info("< execute");
         return greeting;
     }
 
