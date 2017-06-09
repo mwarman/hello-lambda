@@ -1,4 +1,4 @@
-package com.leanstacks.hello.lambda;
+package com.leanstacks.hello.lambda.handler;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -12,14 +12,14 @@ import com.leanstacks.hello.lambda.model.User;
 import com.leanstacks.hello.lambda.service.GreetingService;
 
 @Component
-public class GreetingRequestHandler implements RequestHandler<User, Greeting> {
+public class CreateGreetingRequestHandler implements RequestHandler<User, Greeting> {
 
-    private static final Logger logger = LoggerFactory.getLogger(GreetingRequestHandler.class);
+    private static final Logger logger = LoggerFactory.getLogger(CreateGreetingRequestHandler.class);
 
     private final GreetingService greetingService;
 
     @Autowired
-    public GreetingRequestHandler(GreetingService greetingService) {
+    public CreateGreetingRequestHandler(GreetingService greetingService) {
         this.greetingService = greetingService;
     }
 
