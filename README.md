@@ -11,18 +11,88 @@ This is an [AWS Lambda](https://aws.amazon.com/lambda) function authored in Java
 ## Features
 
 ### Request Handlers
-Discuss the link from AWS Lambda function request handlers to this project. Discuss the organization of handler classes and methods; grouping methods into a class similar to how you would a Controller component.
+Request handler methods are the entry point into your custom Lambda function. The AWS Lambda service invokes a request handler method, passing as method parameters the Input and Context objects. The request handler method returns the Output object to the AWS Lambda service. From a logical application design perspective, think of Request Handler classes as analogous to traditional Spring Controller (or RestController) classes. Each Request Handler class may implement one to many handler methods which are invoked by distinct AWS Lambda configured functions much like a Spring Controller method is invoked based upon its `@RequestMapping` value. If a Request Handler class implements more than one handler method, group the methods into classes containing logically similar activities as you would a Controller class.
 
-Discuss the importance of implementing the SpringRequestHandler abstract class and the implication of declaring the ApplicationContext in the RequestHandler class so that it is initialized when the function is deployed to AWS versus at runtime.
+The role of Request Handler classes and methods is simply to serve as the entry point into your custom Lambda function. Their job is to receive the Input and Context, retrieve a `Function` Bean from the Spring ApplicationContext, execute the Function, and return the Output of the Function to the AWS Lambda service. The business logic should be implemented within the Function or Service application layers executed within the Spring ApplicationContext.
+
+```
+    /**
+     * The AWS Lambda function request handler method for creating Greeting entities.
+     * The function handler signature is:
+     *
+     *   com.leanstacks.hello.lambda.handler.GreetingRequestHandler::createGreeting
+     *
+     * @param user A User object. The Lambda function input.
+     * @param context A Lambda Context object.
+     * @return A Greeting object. The Lambda function output.
+     */
+    public Greeting createGreeting(User user, Context context) {
+        logger.info("> createGreeting");
+
+        Function<User, Greeting> function = getApplicationContext().getBean(CreateGreetingFunction.class);
+        Greeting greeting = function.execute(user, context);
+
+        logger.info("< createGreeting");
+        return greeting;
+    }
+
+```
+
+Each Request Handler class extends `SpringRequestHandler`. The `SpringRequestHandler` class has a static member attribute containing the initialized ApplicationContext.  Using a static member attribute in the parent class, SpringRequestHandler, ensures that the ApplicationContext is initialized once when the AWS Lambda service deploys the custom function to the AWS Lambda Service. By utilizing this approach, the ApplicationContext is initialized prior to the execution of your function which dramatically improves performance and reduces cost.
+
+It is important that all of your custom Lambda function logic be implemented in a **stateless** manner. AWS Lambda functions should not maintain state. AWS makes no guarantee that subsequent client requests will be routed to the same Lambda function instance. If an application requires state management, explore the use of a stateful application hosted on multiple EC2 instances in different availability zones coupled with an elastic load balancer with session affinity (sticky sessions) enabled.
 
 ### Functions
-Discuss the Function interface and implementation classes.  One per AWS Lambda function. This is the main entry point in the Spring application for each function.
+Function classes orchestrate the behavior required to complete the AWS Lambda function. Function classes are managed Spring Beans and, therefore, are receive all the benefits of the Spring Framework such as dependency injection.
+
+The `Function` interface defines the `execute` method which is invoked by the Request Handler. The execute method accepts the Input and Lambda Context objects and returns an Output object to the Request Handler.
+
+```
+@Component
+public class CreateGreetingFunction implements Function<User, Greeting> {
+
+    private static final Logger logger = LoggerFactory.getLogger(CreateGreetingFunction.class);
+
+    /**
+     * The GreetingService business service.
+     */
+    private final GreetingService greetingService;
+
+    /**
+     * Constructs a CreateGreetingFunction object with dependencies.
+     *
+     * @param greetingService A GreetingService.
+     */
+    @Autowired
+    public CreateGreetingFunction(GreetingService greetingService) {
+        this.greetingService = greetingService;
+    }
+
+    @Override
+    public Greeting execute(User user, Context context) {
+        logger.info("> execute");
+        logger.debug("  user.name: {}", user.getName());
+
+        Greeting greeting = greetingService.create(user);
+        logger.debug("  greeting.text: {}", greeting.getText());
+
+        logger.info("< execute");
+        return greeting;
+    }
+
+}
+
+```
 
 ### Spring Components
-Discuss the use of Configuration, Service, and other classes.
+You may include any annotation configured Spring components in the project including: `@Configuration`, `@Component`, `@Service`, `@Repository`, etc.
+
+An `AnnotationConfigApplicationContext` is initialized when the function is deployed to the AWS Lambda service. The ApplicationContext performs a component scan beginning in the project base package and includes all sub-packages.  All Spring stereotype annotated classes are automatically loaded into the ApplicationContext. The project base package is derived from the location of the `ApplicationConfiguration` class.
+
+The `ApplicationConfiguration` class is the main `@Configuration` class of the project and should be located in the base package of the application.  For example, the base package may be `com.example.hello.lambda` with sub-packages such as: `.function`, `.handler`, `.model`, `.repository`, and `.service`. By creating the `ApplicationConfiguration` class in the `com.example.hello.lambda` package, the component scanner will automatically include all Spring components in the base package as well as the sub-packages without additional, explicit configuration.
 
 ### Other Spring Projects
-The project illustrates how to use the HSQLDB in-memory database which is useful for rapid prototyping or unit test execution in a continuous integration environment.
+By including the Spring Framework as a foundation application layer, your Lambda functions may include any other official or community Spring Projects which integrate with the Spring Framework such as Spring Data, Spring Security, etc.
 
 ## Languages
 
