@@ -31,7 +31,7 @@ dependencies {
 defaultTasks 'clean', 'build'
 
 task wrapper(type: Wrapper) {
-  gradleVersion = '3.5'
+  gradleVersion = '3.5.1'
 }
 
 shadowJar {
