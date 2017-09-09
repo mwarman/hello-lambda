@@ -7,7 +7,7 @@ plugins {
 }
 
 ext {
-  springFrameworkVersion = '4.3.9.RELEASE'
+  springFrameworkVersion = '4.3.10.RELEASE'
 }
 
 group = 'com.leanstacks'
