@@ -1,17 +1,17 @@
 plugins {
   id 'java'
   id 'eclipse'
-  id 'com.github.johnrengelman.shadow' version '2.0.0'
+  id 'org.springframework.boot' version '1.5.6.RELEASE'
   id 'project-report'
   id 'build-dashboard'
 }
 
 ext {
-  springFrameworkVersion = '4.3.9.RELEASE'
+  slf4jVersion = '1.7.25'  
 }
 
 group = 'com.leanstacks'
-version = '0.5.0'
+version = '0.6.0'
 sourceCompatibility = 1.8
 
 repositories {
@@ -19,29 +19,34 @@ repositories {
 }
 
 dependencies {
+  compile group: 'org.springframework.boot', name: 'spring-boot-starter'
+  
   compile group: 'com.amazonaws', name: 'aws-lambda-java-core', version: '1.1.0'
   compile group: 'com.amazonaws', name: 'aws-lambda-java-events', version: '1.3.0'
   compile group: 'com.amazonaws', name: 'aws-lambda-java-log4j', version: '1.0.0'
   
-  compile group: 'org.springframework', name: 'spring-context', version: springFrameworkVersion
-  
-  compile group: 'org.slf4j', name: 'slf4j-log4j12', version: '1.7.25'
+  testCompile group: 'org.springframework.boot', name: 'spring-boot-starter-test'
 }
 
 defaultTasks 'clean', 'build'
 
 task wrapper(type: Wrapper) {
-  gradleVersion = '3.5'
+  gradleVersion = '3.5.1'
 }
 
-shadowJar {
-  version = null
+task zip(type: Zip) {
+  archiveName = "${baseName}.${extension}"
+  from compileJava
+  from processResources
+  into('lib') {
+    from configurations.runtime
+  }
 }
 
 jar {
   archiveName = "${baseName}.${extension}"
 }
-jar.finalizedBy shadowJar
+jar.finalizedBy zip
 
 check.finalizedBy projectReport
 
